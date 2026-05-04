@@ -40,6 +40,16 @@ func main() {
 	protected.Use(middleware.AuthRequired)
 	{
 		protected.GET("/profile", handlers.Profile)
+
+		protected.GET("/folders", handlers.GetFolders)
+		protected.POST("/folders", handlers.CreateFolder)
+		protected.DELETE("/folders/:id", handlers.DeleteFolder)
+		protected.PUT("/folders/:id", handlers.UpdateFolder)
+
+		protected.GET("/folders/:id/bookmarks", handlers.GetBookmarks)
+		protected.POST("/bookmarks", handlers.CreateBookmark)
+		protected.DELETE("/bookmarks/:id", handlers.DeleteBookmark)
+		protected.PUT("/bookmarks/:id", handlers.UpdateBookmark)
 	}
 	r.Run(":8080")
 }

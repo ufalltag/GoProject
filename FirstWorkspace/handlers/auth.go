@@ -12,9 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-var jwtRefreshSecret = []byte(os.Getenv("JWT_REFRESH_SECRET"))
-
 func Register(c *gin.Context) {
 	var newUser models.User
 
