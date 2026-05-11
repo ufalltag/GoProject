@@ -48,7 +48,11 @@ func CreateFolder(c *gin.Context) {
 		return
 	}
 
-	folder := services.CreateFolder(input.Name, user.ID)
+	folder, err := services.CreateFolder(input.Name, user.ID)
+	if err != nil {
+		utils.InternalError(c, "Ошибка создания папки")
+		return
+	}
 	c.JSON(http.StatusCreated, gin.H{"folder": models.FolderResponse{ID: folder.ID, Name: folder.Name}})
 }
 

@@ -48,7 +48,11 @@ func CreateBookmark(c *gin.Context) {
 		return
 	}
 
-	bookmark := services.CreateBookmark(input.URL, input.Title, input.FolderID, user.ID)
+	bookmark, err := services.CreateBookmark(input.URL, input.Title, input.FolderID, user.ID)
+	if err != nil {
+		utils.InternalError(c, "Ошибка создания закладки")
+		return
+	}
 	c.JSON(http.StatusCreated, gin.H{"bookmark": models.BookmarkResponse{ID: bookmark.ID, URL: bookmark.URL, Title: bookmark.Title, FolderID: bookmark.FolderID}})
 }
 

@@ -56,7 +56,7 @@ func Login(c *gin.Context) {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неверный email или password"})
 		return
 	}
 
@@ -121,5 +121,5 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": newAccessTokenString})
+	c.JSON(http.StatusOK, gin.H{"accessToken": newAccessTokenString})
 }

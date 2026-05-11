@@ -11,10 +11,10 @@ func GetFoldersByUser(userID uint) ([]models.Folder, error) {
 	return folders, result.Error
 }
 
-func CreateFolder(name string, userID uint) models.Folder {
+func CreateFolder(name string, userID uint) (models.Folder, error) {
 	folder := models.Folder{Name: name, UserID: userID}
-	database.DB.Create(&folder)
-	return folder
+	result := database.DB.Create(&folder)
+	return folder, result.Error
 }
 
 func UpdateFolder(id string, userID uint, name string) bool {

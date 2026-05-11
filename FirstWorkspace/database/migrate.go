@@ -9,10 +9,10 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func RunMigrations(dsn string) {
+func RunMigrations() {
 	m, err := migrate.New(
 		"file://migrations",
-		"postgres://"+dsn,
+		buildDSN(),
 	)
 
 	if err != nil {

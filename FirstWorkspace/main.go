@@ -4,9 +4,7 @@ import (
 	"FirstWorkspace/database"
 	"FirstWorkspace/handlers"
 	"FirstWorkspace/middleware"
-	"fmt"
 	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -17,16 +15,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Ошибка загрузки .env файла")
 	}
-	dsn := fmt.Sprintf(
-		"%s:%s@localhost:%s/%s?sslmode=disable",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
 
-	// Запуск миграции
-	database.RunMigrations(dsn)
+	database.RunMigrations()
 
 	database.Connect()
 
@@ -50,6 +40,8 @@ func main() {
 		protected.POST("/bookmarks", handlers.CreateBookmark)
 		protected.DELETE("/bookmarks/:id", handlers.DeleteBookmark)
 		protected.PUT("/bookmarks/:id", handlers.UpdateBookmark)
+
+		protected.POST("/analyze", handlers.Analyze)
 	}
 	r.Run(":8080")
 }

@@ -10,13 +10,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("my-server-secret")
-
 func AuthRequired(c *gin.Context) {
 	authHeader := c.Request.Header.Get("Authorization")
 
 	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Токен отсутсвует"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Токен отсутствует"})
 		c.Abort()
 		return
 	}

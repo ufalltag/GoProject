@@ -7,19 +7,19 @@ import (
 
 func GetBookmarksByFolder(folderID string, userID uint) []models.Bookmark {
 	var bookmarks []models.Bookmark
-	result := database.DB.Where("folder_id = ? AND user_id = ?", folderID, userID).Find(&bookmarks)
+	database.DB.Where("folder_id = ? AND user_id = ?", folderID, userID).Find(&bookmarks)
 	return bookmarks
 }
 
-func CreateBookmark(url, title string, folderID, userID uint) models.Bookmark {
+func CreateBookmark(url, title string, folderID, userID uint) (models.Bookmark, error) {
 	bookmark := models.Bookmark{
 		URL:      url,
 		Title:    title,
 		FolderID: folderID,
 		UserID:   userID,
 	}
-	database.DB.Create(&bookmark)
-	return bookmark
+	result := database.DB.Create(&bookmark)
+	return bookmark, result.Error
 }
 
 func UpdateBookmark(id string, userID uint, title string, folderID uint) bool {
