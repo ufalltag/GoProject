@@ -4,17 +4,13 @@ import (
 	"FirstWorkspace/database"
 	"FirstWorkspace/handlers"
 	"FirstWorkspace/middleware"
-	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Ошибка загрузки .env файла")
-	}
+	godotenv.Load()
 
 	database.RunMigrations()
 

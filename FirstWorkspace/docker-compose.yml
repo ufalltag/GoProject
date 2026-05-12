@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+
+  # БД
+  postgres:
+    image: postgres:16
+    container_name: myserver-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: myserver
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Ollama
+  ollama:
+    image: ollama/ollama
+    container_name: myserver-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  # Сервер
+  app:
+    build: .
+    container_name: myserver-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - ollama
+
+volumes:
+  postgres_data:
+  ollama_data:
