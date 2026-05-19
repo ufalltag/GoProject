@@ -1,0 +1,734 @@
+openapi: 3.0.3
+info:
+  title: Bookmark Manager API
+  description: API для управления закладками и папками с AI-анализом страниц
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Описание ошибки"
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: "secret123"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: "secret123"
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ProfileResponse:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+
+    FolderRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "Работа"
+
+    FolderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Работа"
+
+    FoldersListResponse:
+      type: object
+      properties:
+        folders:
+          type: array
+          items:
+            $ref: '#/components/schemas/FolderResponse'
+
+    FolderCreatedResponse:
+      type: object
+      properties:
+        folder:
+          $ref: '#/components/schemas/FolderResponse'
+
+    BookmarkRequest:
+      type: object
+      required:
+        - url
+        - folder_id
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://github.com"
+        title:
+          type: string
+          example: "GitHub"
+        folder_id:
+          type: integer
+          example: 1
+
+    BookmarkUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "GitHub — новое название"
+        folder_id:
+          type: integer
+          example: 2
+
+    BookmarkResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        url:
+          type: string
+          example: "https://github.com"
+        title:
+          type: string
+          example: "GitHub"
+        folder_id:
+          type: integer
+          example: 1
+
+    BookmarksListResponse:
+      type: object
+      properties:
+        bookmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookmarkResponse'
+
+    BookmarkCreatedResponse:
+      type: object
+      properties:
+        bookmark:
+          $ref: '#/components/schemas/BookmarkResponse'
+
+    AnalyzeRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://habr.com/ru/articles/123456"
+
+    AnalyzeResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Как устроен Go scheduler"
+        url:
+          type: string
+          example: "https://habr.com/ru/articles/123456"
+        suggested_folder:
+          type: string
+          nullable: true
+          example: "Программирование"
+        is_new_folder:
+          type: boolean
+          example: false
+        confidence:
+          type: number
+          format: float
+          example: 0.92
+        message:
+          type: string
+          example: "Не удалось определить подходящую папку, выберите вручную"
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Операция выполнена успешно"
+
+paths:
+  /register:
+    post:
+      tags:
+        - Auth
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "201":
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Пользователь создан"
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /login:
+    post:
+      tags:
+        - Auth
+      summary: Вход пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Неверный email или пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /refresh:
+    post:
+      tags:
+        - Auth
+      summary: Обновление access токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        "200":
+          description: Новый access токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Токен недействителен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /profile:
+    get:
+      tags:
+        - Auth
+      summary: Получить профиль текущего пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /folders:
+    get:
+      tags:
+        - Folders
+      summary: Получить все папки пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Список папок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoldersListResponse'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Folders
+      summary: Создать папку
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderRequest'
+      responses:
+        "201":
+          description: Папка создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FolderCreatedResponse'
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /folders/{id}:
+    put:
+      tags:
+        - Folders
+      summary: Обновить папку
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderRequest'
+      responses:
+        "200":
+          description: Папка обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Папка обновлена"
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Папка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Folders
+      summary: Удалить папку
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Папка удалена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Папка удалена"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Папка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /folders/{id}/bookmarks:
+    get:
+      tags:
+        - Bookmarks
+      summary: Получить закладки из папки
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Список закладок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarksListResponse'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bookmarks:
+    post:
+      tags:
+        - Bookmarks
+      summary: Создать закладку
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkRequest'
+      responses:
+        "201":
+          description: Закладка создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkCreatedResponse'
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Папка не найдена или не принадлежит пользователю
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bookmarks/{id}:
+    put:
+      tags:
+        - Bookmarks
+      summary: Обновить закладку
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkUpdateRequest'
+      responses:
+        "200":
+          description: Закладка обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Закладка обновлена"
+        "400":
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Закладка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Bookmarks
+      summary: Удалить закладку
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        "200":
+          description: Закладка удалена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: "Закладка удалена"
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Закладка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analyze:
+    post:
+      tags:
+        - Analyze
+      summary: Анализировать страницу и предложить папку
+      description: |
+        Скрапит страницу по URL, анализирует её содержимое через Ollama
+        и предлагает подходящую папку из существующих. Если confidence < 0.7 —
+        вернёт null в suggested_folder с сообщением выбрать вручную.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+      responses:
+        "200":
+          description: Результат анализа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+              examples:
+                high_confidence:
+                  summary: Папка найдена
+                  value:
+                    title: "Как устроен Go scheduler"
+                    url: "https://habr.com/ru/articles/123456"
+                    suggested_folder: "Программирование"
+                    is_new_folder: false
+                    confidence: 0.92
+                low_confidence:
+                  summary: Уверенность низкая
+                  value:
+                    title: "Непонятная статья"
+                    url: "https://example.com/article"
+                    suggested_folder: null
+                    is_new_folder: false
+                    confidence: 0.45
+                    message: "Не удалось определить подходящую папку, выберите вручную"
+        "400":
+          description: Неверные данные или не удалось загрузить страницу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка анализа или парсинга
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
