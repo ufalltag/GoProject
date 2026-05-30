@@ -31,7 +31,7 @@ func Analyze(c *gin.Context) {
 		return
 	}
 
-	folders, err := services.GetFoldersByUser(user.ID)
+	folders, err := services.GetAllFoldersByUser(user.ID)
 	if err != nil {
 		utils.InternalError(c, "Ошибка получения папок")
 		return

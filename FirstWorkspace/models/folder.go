@@ -11,6 +11,7 @@ type Folder struct {
 }
 
 type FolderResponse struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	ID             uint   `json:"id"`
+	Name           string `json:"name"`
+	BookmarksCount int64  `json:"bookmarks_count"`
 }

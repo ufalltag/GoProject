@@ -16,9 +16,41 @@ func GetBookmarks(c *gin.Context) {
 		return
 	}
 
-	bookmarks := services.GetBookmarksByFolder(c.Param("id"), user.ID)
+	pagination := utils.ParsePagination(c)
 
-	var response []models.BookmarkResponse
+	bookmarks, total, err := services.GetBookmarksByFolder(c.Param("id"), user.ID, pagination.Limit, pagination.Offset())
+	if err != nil {
+		utils.InternalError(c, err.Error())
+		return
+	}
+
+	response := make([]models.BookmarkResponse, 0, len(bookmarks))
+	for _, b := range bookmarks {
+		response = append(response, models.BookmarkResponse{ID: b.ID, URL: b.URL, Title: b.Title, FolderID: b.FolderID})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"bookmarks": response,
+		"meta":      utils.NewPageMeta(pagination, total),
+	})
+}
+
+const recentBookmarksLimit = 4
+
+func GetRecentBookmarks(c *gin.Context) {
+	user, err := services.GetUserByEmail(c.MustGet("email").(string))
+	if err != nil {
+		utils.NotFound(c, "Пользователь не найден")
+		return
+	}
+
+	bookmarks, err := services.GetRecentBookmarks(user.ID, recentBookmarksLimit)
+	if err != nil {
+		utils.InternalError(c, "Ошибка получения закладок")
+		return
+	}
+
+	response := make([]models.BookmarkResponse, 0, len(bookmarks))
 	for _, b := range bookmarks {
 		response = append(response, models.BookmarkResponse{ID: b.ID, URL: b.URL, Title: b.Title, FolderID: b.FolderID})
 	}
@@ -64,11 +96,16 @@ func UpdateBookmark(c *gin.Context) {
 	}
 
 	var input struct {
-		Title    string `json:"title"`
-		FolderID uint   `json:"folder_id"`
+		Title    *string `json:"title"`
+		FolderID *uint   `json:"folder_id"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		utils.BadRequest(c, "Неверные данные")
+		return
+	}
+
+	if input.FolderID != nil && !services.FolderBelongsToUser(*input.FolderID, user.ID) {
+		utils.NotFound(c, "Папка не найдена")
 		return
 	}
 

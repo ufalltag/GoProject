@@ -26,6 +26,7 @@ func main() {
 	protected.Use(middleware.AuthRequired)
 	{
 		protected.GET("/profile", handlers.Profile)
+		protected.PUT("/change-password", handlers.ChangePassword)
 
 		protected.GET("/folders", handlers.GetFolders)
 		protected.POST("/folders", handlers.CreateFolder)
@@ -33,6 +34,7 @@ func main() {
 		protected.PUT("/folders/:id", handlers.UpdateFolder)
 
 		protected.GET("/folders/:id/bookmarks", handlers.GetBookmarks)
+		protected.GET("/bookmarks/recent", handlers.GetRecentBookmarks)
 		protected.POST("/bookmarks", handlers.CreateBookmark)
 		protected.DELETE("/bookmarks/:id", handlers.DeleteBookmark)
 		protected.PUT("/bookmarks/:id", handlers.UpdateBookmark)

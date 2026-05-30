@@ -19,3 +19,6 @@ func InternalError(c *gin.Context, message string) {
 func Unauthorized(c *gin.Context, message string) {
 	c.JSON(http.StatusUnauthorized, gin.H{"error": message})
 }
+func Conflict(c *gin.Context, message string) {
+	c.JSON(http.StatusConflict, gin.H{"error": message})
+}

@@ -25,7 +25,8 @@ func buildDSN() string {
 
 func Connect() {
 	db, err := gorm.Open(postgres.Open(buildDSN()), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		Logger:         logger.Default.LogMode(logger.Info),
+		TranslateError: true,
 	})
 
 	if err != nil {
