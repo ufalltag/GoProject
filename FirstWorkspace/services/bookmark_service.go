@@ -3,6 +3,7 @@ package services
 import (
 	"FirstWorkspace/database"
 	"FirstWorkspace/models"
+	"strings"
 )
 
 func GetBookmarksByFolder(folderID string, userID uint, limit, offset int) ([]models.Bookmark, int64, error) {
@@ -66,6 +67,21 @@ func UpdateBookmark(id string, userID uint, title *string, folderID *uint) bool 
 func DeleteBookmark(id string, userID uint) bool {
 	result := database.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Bookmark{})
 	return result.RowsAffected > 0
+}
+
+func SearchBookmarks(userID uint, query string, limit, offset int) ([]models.Bookmark, int64, error) {
+	var bookmarks []models.Bookmark
+	var total int64
+
+	q := database.DB.Model(&models.Bookmark{}).
+		Where("user_id = ? AND lower(title) LIKE ?", userID, strings.ToLower(query)+"%")
+
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	result := q.Order("created_at DESC").Limit(limit).Offset(offset).Find(&bookmarks)
+	return bookmarks, total, result.Error
 }
 
 func FolderBelongsToUser(folderID, userID uint) bool {

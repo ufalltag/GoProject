@@ -117,6 +117,38 @@ func UpdateBookmark(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Закладка обновлена"})
 }
 
+func SearchBookmarks(c *gin.Context) {
+	user, err := services.GetUserByEmail(c.MustGet("email").(string))
+	if err != nil {
+		utils.NotFound(c, "Пользователь не найден")
+		return
+	}
+
+	query := c.Query("q")
+	if query == "" {
+		utils.BadRequest(c, "Параметр q обязателен")
+		return
+	}
+
+	pagination := utils.ParsePagination(c)
+
+	bookmarks, total, err := services.SearchBookmarks(user.ID, query, pagination.Limit, pagination.Offset())
+	if err != nil {
+		utils.InternalError(c, err.Error())
+		return
+	}
+
+	response := make([]models.BookmarkResponse, 0, len(bookmarks))
+	for _, b := range bookmarks {
+		response = append(response, models.BookmarkResponse{ID: b.ID, URL: b.URL, Title: b.Title, FolderID: b.FolderID})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"bookmarks": response,
+		"meta":      utils.NewPageMeta(pagination, total),
+	})
+}
+
 func DeleteBookmark(c *gin.Context) {
 	user, err := services.GetUserByEmail(c.MustGet("email").(string))
 	if err != nil {

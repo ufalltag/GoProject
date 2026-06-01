@@ -35,6 +35,7 @@ func main() {
 
 		protected.GET("/folders/:id/bookmarks", handlers.GetBookmarks)
 		protected.GET("/bookmarks/recent", handlers.GetRecentBookmarks)
+		protected.GET("/bookmarks/search", handlers.SearchBookmarks)
 		protected.POST("/bookmarks", handlers.CreateBookmark)
 		protected.DELETE("/bookmarks/:id", handlers.DeleteBookmark)
 		protected.PUT("/bookmarks/:id", handlers.UpdateBookmark)

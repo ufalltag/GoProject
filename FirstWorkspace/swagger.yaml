@@ -727,6 +727,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /bookmarks/search:
+    get:
+      tags:
+        - Bookmarks
+      summary: Поиск закладок по началу title (постранично, от новых к старым)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Поисковый запрос — ищет закладки, title которых начинается с указанной строки (без учёта регистра)
+          schema:
+            type: string
+            minLength: 1
+          example: "GitHub"
+        - name: page
+          in: query
+          description: Номер страницы (по умолчанию 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Количество объектов на странице (максимум 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+            default: 20
+      responses:
+        "200":
+          description: Результаты поиска
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarksListResponse'
+              example:
+                bookmarks:
+                  - id: 3
+                    url: "https://github.com"
+                    title: "GitHub"
+                    folder_id: 1
+                  - id: 7
+                    url: "https://github.com/golang/go"
+                    title: "GitHub — golang/go"
+                    folder_id: 1
+                meta:
+                  page: 1
+                  limit: 20
+                  total: 2
+                  total_pages: 1
+        "400":
+          description: Параметр q не указан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /bookmarks:
     post:
       tags:
