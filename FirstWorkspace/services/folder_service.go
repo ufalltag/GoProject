@@ -5,6 +5,8 @@ import (
 
 	"FirstWorkspace/database"
 	"FirstWorkspace/models"
+
+	"gorm.io/gorm"
 )
 
 // ErrFolderNotFound возвращается, когда папка не найдена или не принадлежит пользователю.
@@ -65,8 +67,26 @@ func UpdateFolder(id string, userID uint, name string) error {
 }
 
 func DeleteFolder(id string, userID uint) bool {
-	result := database.DB.
-		Where("id = ? AND user_id = ?", id, userID).
-		Delete(&models.Folder{})
-	return result.RowsAffected > 0
+	deleted := false
+	database.DB.Transaction(func(tx *gorm.DB) error {
+		result := tx.
+			Where("id = ? AND user_id = ?", id, userID).
+			Delete(&models.Folder{})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return nil
+		}
+
+		if err := tx.
+			Where("folder_id = ? AND user_id = ?", id, userID).
+			Delete(&models.Bookmark{}).Error; err != nil {
+			return err
+		}
+
+		deleted = true
+		return nil
+	})
+	return deleted
 }
